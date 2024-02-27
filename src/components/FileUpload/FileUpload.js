@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
-import { fileUpload } from "../../services/fileupload";
+import { fileUpload, getResultById } from "../../services/fileupload";
 import { json2csv } from "json-2-csv";
 
 const getColor = (props) => {
@@ -111,10 +111,19 @@ const FileUpload = (props) => {
 
     if (file) {
       updateUploadStatus("file loaded");
-
       fileUpload(file)
         .then((response) => {
-          console.log("File uploaded successfully:", response.data);
+          console.log("File uploaded successfully:", response.file_id);
+
+          getResultById(response.file_id)
+            .then((response) => {
+              console.log("Get result successfully:", response);
+            })
+            .catch((error) => {
+              console.error("Error uploading file:", error);
+              // Handle error, display error message, etc.
+            });
+
           updateUploadStatus("processing completed");
           // Handle success, update state, etc.
         })
@@ -156,32 +165,52 @@ const FileUpload = (props) => {
       {
         question: "What is the capital of France?",
         answer: "Paris",
-        score: 8,
-        source: "Geography Quiz",
+        score: "Low",
+        source: [
+          "prposal-center/vendor.docx",
+          "prposal-center/syatem.docx",
+          "prposal-center/ecosystem.docx",
+        ],
       },
       {
         question: "Who wrote 'Romeo and Juliet'?",
         answer: "William Shakespeare",
-        score: 9,
-        source: "Literature Quiz",
+        score: "Low",
+        source: [
+          "prposal-center/vendor.docx",
+          "prposal-center/syatem.docx",
+          "prposal-center/ecosystem.docx",
+        ],
       },
       {
         question: "What is the largest planet in our solar system?",
         answer: "Jupiter",
-        score: 7,
-        source: "Science Quiz",
+        score: "High",
+        source: [
+          "prposal-center/vendor.docx",
+          "prposal-center/syatem.docx",
+          "prposal-center/ecosystem.docx",
+        ],
       },
       {
         question: "In which year did World War II end?",
         answer: "1945",
-        score: 10,
-        source: "History Quiz",
+        score: "Average",
+        source: [
+          "prposal-center/vendor.docx",
+          "prposal-center/syatem.docx",
+          "prposal-center/ecosystem.docx",
+        ],
       },
       {
         question: "What is the chemical symbol for gold?",
         answer: "Au",
-        score: 8,
-        source: "Chemistry Quiz",
+        score: "Low",
+        source: [
+          "prposal-center/vendor.docx",
+          "prposal-center/syatem.docx",
+          "prposal-center/ecosystem.docx",
+        ],
       },
     ];
 

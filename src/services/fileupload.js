@@ -8,6 +8,10 @@ const axiosInstance = axios.create({
   baseURL: BASE_URL,
 });
 
+const headers = {
+  "Content-Type": "application/json", // Adjust this based on your API requirements
+};
+
 const fileUpload = (file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -19,4 +23,16 @@ const fileUpload = (file) => {
   });
 };
 
-export { fileUpload };
+const getResultById = (fileId) => {
+  return axiosInstance.get(`/result/${fileId}`, {
+    headers,
+  });
+};
+
+const getStatusById = (fileId) => {
+  return axiosInstance.get(`/status/${fileId}`, {
+    headers,
+  });
+};
+
+export { fileUpload, getResultById, getStatusById };
