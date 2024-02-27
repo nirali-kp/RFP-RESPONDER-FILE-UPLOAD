@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { fileUpload, getResultById } from "../../services/fileupload";
 import { json2csv } from "json-2-csv";
 import { toast } from "react-toastify";
+import { ProgressBar } from "react-loader-spinner";
 
 const getColor = (props) => {
   if (props.isDragAccept) {
@@ -84,6 +85,7 @@ const DragDropTitle = styled.p`
 
 const FileUpload = (props) => {
   const [uploadStatus, setUploadStatus] = useState(null);
+  const [progress, setProgress] = useState(false);
 
   const updateUploadStatus = (status) => {
     setUploadStatus(status);
@@ -119,13 +121,16 @@ const FileUpload = (props) => {
 
     if (file) {
       updateUploadStatus("file loaded");
+      setProgress(true);
       fileUpload(file)
         .then((response) => {
           toast.success("File uploaded successfully:");
-          console.log("File uploaded successfully:", response.file_id);
 
-          getResultById(response.file_id)
+          console.log("File uploaded successfully:", response?.file_id);
+          getResultById(response?.file_id)
             .then((response) => {
+              setProgress(false);
+
               console.log("Get result successfully:", response);
             })
             .catch((error) => {
@@ -250,6 +255,15 @@ const FileUpload = (props) => {
       {/* {uploadStatus && (
         <UploadStatus uploadStatus={uploadStatus}>{uploadStatus}</UploadStatus>
       )} */}
+      {/* <ProgressBar
+        visible={progress}
+        height="80"
+        width="100%"
+        color="#4fa94d"
+        ariaLabel="progress-bar-loading"
+        wrapperStyle={{}}
+        wrapperClass=""
+      /> */}
       <Container {...getRootProps({ className: "dropzone" })}>
         <input {...getInputProps()} />
         <DragDropTitle>
@@ -262,7 +276,13 @@ const FileUpload = (props) => {
           <>
             <h4>Accepted files :</h4>
             <StyledUl isAccepted={true}>{acceptedFileItems}</StyledUl>
-            <Button onClick={() => downloadCsv()}>Download</Button>
+            <Button
+              style={{ backgroundColor: progress ? "#b4b3b3" : "#2196f3" }}
+              disabled={progress}
+              onClick={() => downloadCsv()}
+            >
+              Download
+            </Button>
           </>
         ) : (
           <>
