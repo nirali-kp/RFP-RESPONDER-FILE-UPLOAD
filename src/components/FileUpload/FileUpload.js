@@ -3,18 +3,19 @@ import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
 import { fileUpload, getResultById } from "../../services/fileupload";
 import { json2csv } from "json-2-csv";
+import { toast } from "react-toastify";
 
 const getColor = (props) => {
   if (props.isDragAccept) {
-    return "#00e676";
+    return "#00897b"; // Dark Teal
   }
   if (props.isDragReject) {
-    return "#ff1744";
+    return "#d32f2f"; // Dark Red
   }
   if (props.isFocused) {
-    return "#2196f3";
+    return "#1565c0"; // Dark Blue
   }
-  return "#eeeeee";
+  return "#b4b3b3"; // Dark Gray
 };
 
 const Container = styled.div`
@@ -22,13 +23,14 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 30px;
+  margin-top: 50px;
   border-width: 2px;
   border-radius: 2px;
   border-color: ${(props) => getColor(props)};
   border-style: dashed;
-  background-color: #fafafa;
-  color: #bdbdbd;
+  background-color: #f6f6f6;
+  color: #8b8282;
   outline: none;
   transition: border 0.24s ease-in-out;
 `;
@@ -44,34 +46,40 @@ const StyledUl = styled.ul`
 const UploadStatus = styled.h4`
   background-color: ${(props) =>
     props.uploadStatus === "file loaded"
-      ? "#e0e0e0"
+      ? "#4caf50" // Dark Green
       : props.uploadStatus === "processing started"
-      ? "#bbdefb"
+      ? "#1565c0" // Dark Blue
       : props.uploadStatus === "processing completed"
-      ? "#dcedc8"
-      : "#fafafa"};
-  padding: 15px 15px;
-  width: 250px;
+      ? "#8bc34a" // Dark Lime Green
+      : "#757575"}; // Dark Gray
+  padding: 15px 20px;
+  width: 300px;
   border-radius: 5px;
-  list-style: none;
+  color: #ffffff;
   display: flex;
-  flex-direction: column; /* Make the container a column */
+  flex-direction: column;
   align-items: center;
   text-align: center;
+  margin: 20px;
 `;
 
 const Button = styled.button`
-  background-color: #3498db;
+  background-color: #2196f3; // Dark Blue
   color: #fff;
   padding: 10px 20px;
   font-size: 16px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-top: 20px;
 
   &:hover {
-    background-color: #2980b9;
+    background-color: #1565c0; // Darker Blue
   }
+`;
+
+const DragDropTitle = styled.p`
+  margin-top: 0px;
 `;
 
 const FileUpload = (props) => {
@@ -113,6 +121,7 @@ const FileUpload = (props) => {
       updateUploadStatus("file loaded");
       fileUpload(file)
         .then((response) => {
+          toast.success("File uploaded successfully:");
           console.log("File uploaded successfully:", response.file_id);
 
           getResultById(response.file_id)
@@ -238,12 +247,14 @@ const FileUpload = (props) => {
 
   return (
     <section>
-      {uploadStatus && (
+      {/* {uploadStatus && (
         <UploadStatus uploadStatus={uploadStatus}>{uploadStatus}</UploadStatus>
-      )}
+      )} */}
       <Container {...getRootProps({ className: "dropzone" })}>
         <input {...getInputProps()} />
-        <p>Drag 'n' drop some files here, or click to select files</p>
+        <DragDropTitle>
+          Drag 'n' drop some files here, or click to select files
+        </DragDropTitle>
         <em>(Only *.csv/.xls/.xlsx files are accepted)</em>
       </Container>
       <aside>
@@ -258,14 +269,14 @@ const FileUpload = (props) => {
             <h4>Accepted files : {acceptedFileItems.length}</h4>
           </>
         )}
-        {fileRejectionItems.length ? (
+        {/* {fileRejectionItems.length ? (
           <>
             <h4>Rejected files</h4>
             <StyledUl isAccepted={false}>{fileRejectionItems}</StyledUl>
           </>
         ) : (
           <h4>Rejected files : {fileRejectionItems.length}</h4>
-        )}
+        )} */}
       </aside>
     </section>
   );

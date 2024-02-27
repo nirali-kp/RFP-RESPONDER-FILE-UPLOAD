@@ -1,10 +1,12 @@
-import React from 'react';
-import styled from 'styled-components';
-import FileUpload from './components/FileUpload/FileUpload';
+import React from "react";
+import styled from "styled-components";
+import FileUpload from "./components/FileUpload/FileUpload";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AppContainer = styled.div`
-  background-color: #ffffff;
-  /* min-height: 100vh; */
+  background-color: #fafafa;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,6 +17,20 @@ const AppContainer = styled.div`
 const App = () => {
   return (
     <AppContainer>
+      <h1>File upload demo</h1>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       <FileUpload />
     </AppContainer>
   );
