@@ -145,8 +145,7 @@ const FileUpload = (props) => {
             console.log("response", response);
 
             if (response?.data?.status == "processing completed") {
-          setProgress(false);
-          
+              setProgress(false);
               clearInterval(intervalId);
             }
             setUploadStatus(response?.data?.status);
@@ -180,7 +179,7 @@ const FileUpload = (props) => {
     }
   }, []);
 
-  const { acceptedFiles, fileRejections, getRootProps, getInputProps } =
+  const { acceptedFiles, getRootProps, getInputProps } =
     useDropzone({
       accept: {
         "text/csv": [".csv", ".xlsx", ".xls"],
@@ -195,16 +194,19 @@ const FileUpload = (props) => {
     </li>
   ));
 
-  const fileRejectionItems = fileRejections.map(({ file, errors }) => (
-    <li key={file.path}>
-      {file.path} - {file.size} bytes
-      <ul>
-        {errors.map((e) => (
-          <li key={e.code}>{e.message}</li>
-        ))}
-      </ul>
-    </li>
-  ));
+  const capitalizeObjectKeys = (data) =>
+    data.map((item) => {
+      const capitalizedItem = Object.fromEntries(
+        Object.entries(item).map(([key, value]) => [
+          key.charAt(0).toUpperCase() + key.slice(1),
+          value,
+        ])
+      );
+      // Convert source array to a single string
+      capitalizedItem["Source"] = capitalizedItem.Source.join(", ");
+
+      return capitalizedItem;
+    });
 
   const downloadCsv = () => {
     // let data = [
@@ -265,7 +267,9 @@ const FileUpload = (props) => {
       .then((response) => {
         data = response.data;
 
-        const csv = json2csv(data);
+        let capitalizedData = capitalizeObjectKeys(data);
+
+        const csv = json2csv(capitalizedData);
 
         // Create a Blob from the CSV data
         const blob = new Blob([csv], { type: "text/csv" });
@@ -297,7 +301,7 @@ const FileUpload = (props) => {
     <section>
       {progress && (
         <>
-          <h4>{uploadStatus ? uploadStatus :'Upload in progress'}</h4>
+          <h4>{uploadStatus ? uploadStatus : "Upload in progress"}</h4>
           <LinearProgress
             indeterminate={true}
             style={{ height: "6px" }}
@@ -307,7 +311,7 @@ const FileUpload = (props) => {
         </>
       )}
 
-      {uploadStatus=="processing completed" && (
+      {uploadStatus == "processing completed" && (
         <UploadStatus uploadStatus={uploadStatus}>{uploadStatus}</UploadStatus>
       )}
       {/* <ProgressBar
@@ -344,14 +348,6 @@ const FileUpload = (props) => {
             <h4>Uploaded files : 0</h4>
           </>
         )}
-        {/* {fileRejectionItems.length ? (
-          <>
-            <h4>Rejected files</h4>
-            <StyledUl isAccepted={false}>{fileRejectionItems}</StyledUl>
-          </>
-        ) : (
-          <h4>Rejected files : {fileRejectionItems.length}</h4>
-        )} */}
       </aside>
     </section>
   );
