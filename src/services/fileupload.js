@@ -24,7 +24,7 @@ const fileUpload = (file) => {
 };
 
 const getResultById = (fileId) => {
-  return axiosInstance.get(`/result/${fileId}`, {
+  return axiosInstance.get(`/result/5502507a-fca7-4c83-96e5-e220920399bf`, {
     headers,
   });
 };

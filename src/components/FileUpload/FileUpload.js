@@ -1,10 +1,17 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
-import { fileUpload, getResultById } from "../../services/fileupload";
+import {
+  fileUpload,
+  getResultById,
+  getStatusById,
+} from "../../services/fileupload";
 import { json2csv } from "json-2-csv";
 import { toast } from "react-toastify";
 import { ProgressBar } from "react-loader-spinner";
+import "@material/react-linear-progress/dist/linear-progress.css";
+
+import LinearProgress from "@material/react-linear-progress";
 
 const getColor = (props) => {
   if (props.isDragAccept) {
@@ -86,60 +93,85 @@ const DragDropTitle = styled.p`
 const FileUpload = (props) => {
   const [uploadStatus, setUploadStatus] = useState(null);
   const [progress, setProgress] = useState(false);
+  const [fileId, setFileId] = useState(null);
 
   const updateUploadStatus = (status) => {
     setUploadStatus(status);
   };
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      // Fetch the current upload status here (e.g., from the server)
-      // and update the upload status using updateUploadStatus function
-      // For now, let's simulate different statuses in a cyclic manner
-      switch (uploadStatus) {
-        case null:
-        case "processing completed":
-          updateUploadStatus("file loaded");
-          break;
-        case "file loaded":
-          updateUploadStatus("processing started");
-          break;
-        case "processing started":
-          updateUploadStatus("processing completed");
-          break;
-        default:
-          break;
-      }
-    }, 3000);
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     // Fetch the current upload status here (e.g., from the server)
+  //     // and update the upload status using updateUploadStatus function
+  //     // For now, let's simulate different statuses in a cyclic manner
+  //     // switch (uploadStatus) {
+  //     //   case null:
+  //     //   case "processing completed":
+  //     //     updateUploadStatus("file loaded");
+  //     //     break;
+  //     //   case "file loaded":
+  //     //     updateUploadStatus("processing started");
+  //     //     break;
+  //     //   case "processing started":
+  //     //     updateUploadStatus("processing completed");
+  //     //     break;
+  //     //   default:
+  //     //     break;
+  //     // }
+  //     getStatusById(response?.data?.file_id)
+  //     .then((response) => {
+  //       setProgress(false);
 
-    // Cleanup the interval on component unmount
+  //       console.log("Get result successfully:", response);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error uploading file:", error);
+  //       // Handle error, display error message, etc.
+  //     });
+  //   }, 3000);
+
+  //   // Cleanup the interval on component unmount
+  //   return () => clearInterval(intervalId);
+  // }, [uploadStatus]);
+
+  useEffect(() => {
+    let intervalId;
+    // setProgress(true);
+
+    if (fileId) {
+      intervalId = setInterval(() => {
+        getStatusById(fileId)
+          .then((response) => {
+            console.log("response", response);
+
+            if (response?.data?.status == "processing completed") {
+          setProgress(false);
+          
+              clearInterval(intervalId);
+            }
+            setUploadStatus(response?.data?.status);
+          })
+          .catch((error) => {
+            console.error("Error uploading file:", error);
+            // Handle error, display error message, etc.
+          });
+      }, 1000);
+    }
+
     return () => clearInterval(intervalId);
-  }, [uploadStatus]);
+  }, [fileId]);
 
   const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
 
     if (file) {
-      updateUploadStatus("file loaded");
       setProgress(true);
+
       fileUpload(file)
         .then((response) => {
-          toast.success("File uploaded successfully:");
-
-          console.log("File uploaded successfully:", response?.file_id);
-          getResultById(response?.file_id)
-            .then((response) => {
-              setProgress(false);
-
-              console.log("Get result successfully:", response);
-            })
-            .catch((error) => {
-              console.error("Error uploading file:", error);
-              // Handle error, display error message, etc.
-            });
-
-          updateUploadStatus("processing completed");
-          // Handle success, update state, etc.
+          setFileId(response?.data?.file_id);
+          toast.success("File uploaded successfully");
+          console.log("File uploaded successfully:", response);
         })
         .catch((error) => {
           console.error("Error uploading file:", error);
@@ -174,87 +206,110 @@ const FileUpload = (props) => {
     </li>
   ));
 
-  const downloadCsv = async () => {
-    let data = [
-      {
-        question: "What is the capital of France?",
-        answer: "Paris",
-        score: "Low",
-        source: [
-          "prposal-center/vendor.docx",
-          "prposal-center/syatem.docx",
-          "prposal-center/ecosystem.docx",
-        ],
-      },
-      {
-        question: "Who wrote 'Romeo and Juliet'?",
-        answer: "William Shakespeare",
-        score: "Low",
-        source: [
-          "prposal-center/vendor.docx",
-          "prposal-center/syatem.docx",
-          "prposal-center/ecosystem.docx",
-        ],
-      },
-      {
-        question: "What is the largest planet in our solar system?",
-        answer: "Jupiter",
-        score: "High",
-        source: [
-          "prposal-center/vendor.docx",
-          "prposal-center/syatem.docx",
-          "prposal-center/ecosystem.docx",
-        ],
-      },
-      {
-        question: "In which year did World War II end?",
-        answer: "1945",
-        score: "Average",
-        source: [
-          "prposal-center/vendor.docx",
-          "prposal-center/syatem.docx",
-          "prposal-center/ecosystem.docx",
-        ],
-      },
-      {
-        question: "What is the chemical symbol for gold?",
-        answer: "Au",
-        score: "Low",
-        source: [
-          "prposal-center/vendor.docx",
-          "prposal-center/syatem.docx",
-          "prposal-center/ecosystem.docx",
-        ],
-      },
-    ];
+  const downloadCsv = () => {
+    // let data = [
+    //   {
+    //     question: "What is the capital of France?",
+    //     answer: "Paris",
+    //     score: "Low",
+    //     source: [
+    //       "prposal-center/vendor.docx",
+    //       "prposal-center/syatem.docx",
+    //       "prposal-center/ecosystem.docx",
+    //     ],
+    //   },
+    //   {
+    //     question: "Who wrote 'Romeo and Juliet'?",
+    //     answer: "William Shakespeare",
+    //     score: "Low",
+    //     source: [
+    //       "prposal-center/vendor.docx",
+    //       "prposal-center/syatem.docx",
+    //       "prposal-center/ecosystem.docx",
+    //     ],
+    //   },
+    //   {
+    //     question: "What is the largest planet in our solar system?",
+    //     answer: "Jupiter",
+    //     score: "High",
+    //     source: [
+    //       "prposal-center/vendor.docx",
+    //       "prposal-center/syatem.docx",
+    //       "prposal-center/ecosystem.docx",
+    //     ],
+    //   },
+    //   {
+    //     question: "In which year did World War II end?",
+    //     answer: "1945",
+    //     score: "Average",
+    //     source: [
+    //       "prposal-center/vendor.docx",
+    //       "prposal-center/syatem.docx",
+    //       "prposal-center/ecosystem.docx",
+    //     ],
+    //   },
+    //   {
+    //     question: "What is the chemical symbol for gold?",
+    //     answer: "Au",
+    //     score: "Low",
+    //     source: [
+    //       "prposal-center/vendor.docx",
+    //       "prposal-center/syatem.docx",
+    //       "prposal-center/ecosystem.docx",
+    //     ],
+    //   },
+    // ];
+    let data = [];
 
-    const csv = await json2csv(data);
+    getResultById(fileId)
+      .then((response) => {
+        data = response.data;
 
-    // Create a Blob from the CSV data
-    const blob = new Blob([csv], { type: "text/csv" });
+        const csv = json2csv(data);
 
-    // Create a download link
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
+        // Create a Blob from the CSV data
+        const blob = new Blob([csv], { type: "text/csv" });
 
-    // Set the filename for the download
-    link.download = "sample.csv";
+        // Create a download link
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
 
-    // Append the link to the body
-    document.body.appendChild(link);
+        // Set the filename for the download
+        link.download = "sample.csv";
 
-    // Trigger the click event on the link to start the download
-    link.click();
+        // Append the link to the body
+        document.body.appendChild(link);
 
-    // Remove the link from the body
-    document.body.removeChild(link);
+        // Trigger the click event on the link to start the download
+        link.click();
+
+        // Remove the link from the body
+        document.body.removeChild(link);
+        toast.success("File downloaded successfully:");
+      })
+      .catch((error) => {
+        console.error("Error uploading file:", error);
+        // Handle error, display error message, etc.
+      });
   };
 
   return (
     <section>
-      {/* {uploadStatus && (
+      {progress && (
+        <>
+          <h4>{uploadStatus ? uploadStatus :'Upload in progress'}</h4>
+          <LinearProgress
+            indeterminate={true}
+            style={{ height: "6px" }}
+            buffer={0.9}
+            progress={0.8}
+          />
+        </>
+      )}
+
+      {uploadStatus=="processing completed" && (
         <UploadStatus uploadStatus={uploadStatus}>{uploadStatus}</UploadStatus>
-      )} */}
+      )}
       {/* <ProgressBar
         visible={progress}
         height="80"
@@ -272,9 +327,9 @@ const FileUpload = (props) => {
         <em>(Only *.csv/.xls/.xlsx files are accepted)</em>
       </Container>
       <aside>
-        {acceptedFileItems.length ? (
+        {acceptedFileItems.length && uploadStatus == "processing completed" ? (
           <>
-            <h4>Accepted files :</h4>
+            <h4>Uploaded files :</h4>
             <StyledUl isAccepted={true}>{acceptedFileItems}</StyledUl>
             <Button
               style={{ backgroundColor: progress ? "#b4b3b3" : "#2196f3" }}
@@ -286,7 +341,7 @@ const FileUpload = (props) => {
           </>
         ) : (
           <>
-            <h4>Accepted files : {acceptedFileItems.length}</h4>
+            <h4>Uploaded files : 0</h4>
           </>
         )}
         {/* {fileRejectionItems.length ? (
