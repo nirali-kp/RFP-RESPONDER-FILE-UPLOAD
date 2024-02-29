@@ -45,7 +45,7 @@ const Container = styled.div`
 
 const StyledUl = styled.ul`
   border: 2px solid ${(props) => (props.isAccepted ? "#e0e0e0" : "#ffa726")};
-  padding: 15px;
+  padding: 10px;
   border-radius: 10px;
   list-style: none; /* Remove the default list-style dots */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle box shadow */
@@ -90,49 +90,71 @@ const DragDropTitle = styled.p`
   margin-top: 0px;
 `;
 
+const FileItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+`;
+
+const CloseIcon = styled.span`
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 50%;
+  padding: 1px 4px;
+  background-color: #e0e0e0;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.3s ease-in-out;
+`;
+
+const FileInfo = styled.span`
+  /* You can add additional styles here if needed */
+`;
+
 const FileUpload = (props) => {
   const [uploadStatus, setUploadStatus] = useState(null);
   const [progress, setProgress] = useState(false);
   const [fileId, setFileId] = useState(null);
 
-  const updateUploadStatus = (status) => {
-    setUploadStatus(status);
+  const [files, setFiles] = useState([]);
+
+  const handleRemoveFile = () => {
+    setFiles([]);
+    setFileId(null);
   };
 
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     // Fetch the current upload status here (e.g., from the server)
-  //     // and update the upload status using updateUploadStatus function
-  //     // For now, let's simulate different statuses in a cyclic manner
-  //     // switch (uploadStatus) {
-  //     //   case null:
-  //     //   case "processing completed":
-  //     //     updateUploadStatus("file loaded");
-  //     //     break;
-  //     //   case "file loaded":
-  //     //     updateUploadStatus("processing started");
-  //     //     break;
-  //     //   case "processing started":
-  //     //     updateUploadStatus("processing completed");
-  //     //     break;
-  //     //   default:
-  //     //     break;
-  //     // }
-  //     getStatusById(response?.data?.file_id)
-  //     .then((response) => {
-  //       setProgress(false);
+  const onDrop = useCallback(async (acceptedFiles) => {
+    const file = acceptedFiles[0];
 
-  //       console.log("Get result successfully:", response);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error uploading file:", error);
-  //       // Handle error, display error message, etc.
-  //     });
-  //   }, 3000);
+    if (file) {
+      setProgress(true);
 
-  //   // Cleanup the interval on component unmount
-  //   return () => clearInterval(intervalId);
-  // }, [uploadStatus]);
+      fileUpload(file)
+        .then((response) => {
+          setFileId(response?.data?.file_id);
+          toast.success("File uploaded successfully");
+          console.log("File uploaded successfully:", response);
+        })
+        .catch((error) => {
+          console.error("Error uploading file:", error);
+          // Handle error, display error message, etc.
+        });
+    }
+  }, []);
+
+  const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
+    accept: {
+      "text/csv": [".xlsx", ".xls"],
+    },
+    maxFiles: 1,
+    onDrop,
+  });
+
+  useEffect(() => {
+    if (acceptedFiles.length) {
+      setFiles([...acceptedFiles]);
+    }
+  }, [acceptedFiles]);
 
   useEffect(() => {
     let intervalId;
@@ -160,38 +182,15 @@ const FileUpload = (props) => {
     return () => clearInterval(intervalId);
   }, [fileId]);
 
-  const onDrop = useCallback(async (acceptedFiles) => {
-    const file = acceptedFiles[0];
-
-    if (file) {
-      setProgress(true);
-
-      fileUpload(file)
-        .then((response) => {
-          setFileId(response?.data?.file_id);
-          toast.success("File uploaded successfully");
-          console.log("File uploaded successfully:", response);
-        })
-        .catch((error) => {
-          console.error("Error uploading file:", error);
-          // Handle error, display error message, etc.
-        });
-    }
-  }, []);
-
-  const { acceptedFiles, getRootProps, getInputProps } =
-    useDropzone({
-      accept: {
-        "text/csv": [".csv", ".xlsx", ".xls"],
-      },
-      maxFiles: 1,
-      onDrop,
-    });
-
   const acceptedFileItems = acceptedFiles.map((file) => (
-    <li key={file.path}>
-      {file.path} - {file.size} bytes
-    </li>
+    <FileItem key={file.path}>
+      <FileInfo>
+        {file.path} - {file.size} bytes
+      </FileInfo>
+      {fileId && files.length && uploadStatus == "processing completed" && (
+        <CloseIcon onClick={() => handleRemoveFile(file)}>X</CloseIcon>
+      )}
+    </FileItem>
   ));
 
   const capitalizeObjectKeys = (data) =>
@@ -311,7 +310,7 @@ const FileUpload = (props) => {
         </>
       )}
 
-      {uploadStatus == "processing completed" && (
+      {uploadStatus == "processing completed" && fileId && (
         <UploadStatus uploadStatus={uploadStatus}>{uploadStatus}</UploadStatus>
       )}
       {/* <ProgressBar
@@ -328,25 +327,25 @@ const FileUpload = (props) => {
         <DragDropTitle>
           Drag 'n' drop some files here, or click to select files
         </DragDropTitle>
-        <em>(Only *.csv/.xls/.xlsx files are accepted)</em>
+        <em>(Only *.xls/.xlsx files are accepted)</em>
       </Container>
       <aside>
-        {acceptedFileItems.length && uploadStatus == "processing completed" ? (
+        {fileId ? (
           <>
-            <h4>Uploaded files :</h4>
+            <h4>Uploaded file :</h4>
             <StyledUl isAccepted={true}>{acceptedFileItems}</StyledUl>
-            <Button
-              style={{ backgroundColor: progress ? "#b4b3b3" : "#2196f3" }}
-              disabled={progress}
-              onClick={() => downloadCsv()}
-            >
-              Download
-            </Button>
           </>
         ) : (
-          <>
-            <h4>Uploaded files : 0</h4>
-          </>
+          <h4>Uploaded file : 0</h4>
+        )}
+        {fileId && files.length && uploadStatus == "processing completed" && (
+          <Button
+            style={{ backgroundColor: progress ? "#b4b3b3" : "#2196f3" }}
+            disabled={progress}
+            onClick={() => downloadCsv()}
+          >
+            Download File
+          </Button>
         )}
       </aside>
     </section>

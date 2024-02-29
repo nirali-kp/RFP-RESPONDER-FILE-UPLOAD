@@ -3,7 +3,7 @@ import styled from "styled-components";
 import FileUpload from "./components/FileUpload/FileUpload";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+ 
 const AppContainer = styled.div`
   background-color: #fafafa;
   min-height: 100vh;
@@ -13,12 +13,15 @@ const AppContainer = styled.div`
   justify-content: flex-start;
   padding-top: 50px;
 `;
-
+ 
+const Title = styled.h1`
+  color: #495865;
+`;
+ 
 const App = () => {
   return (
     <AppContainer>
-      <h1>File upload demo</h1>
-
+      <Title>RFP Responder</Title>
       <ToastContainer
         position="top-right"
         autoClose={1000}
@@ -35,5 +38,5 @@ const App = () => {
     </AppContainer>
   );
 };
-
+ 
 export default App;
